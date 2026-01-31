@@ -2,15 +2,22 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
-  Param,
   Delete,
+  Param,
+  Body,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { PaymentResponseDto } from './dto/payment-response.dto';
+import {
+  ApiTags,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -18,27 +25,40 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
+  @ApiCreatedResponse({ type: PaymentResponseDto })
+  create(
+    @Body() createPaymentDto: CreatePaymentDto,
+  ): Promise<PaymentResponseDto> {
     return this.paymentsService.create(createPaymentDto);
   }
 
   @Get()
-  findAll() {
+  @ApiOkResponse({ type: PaymentResponseDto, isArray: true })
+  findAll(): Promise<PaymentResponseDto[]> {
     return this.paymentsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(+id);
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiOkResponse({ type: PaymentResponseDto })
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<PaymentResponseDto> {
+    return this.paymentsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentsService.update(+id, updatePaymentDto);
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiOkResponse({ type: PaymentResponseDto })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePaymentDto: UpdatePaymentDto,
+  ): Promise<PaymentResponseDto> {
+    return this.paymentsService.update(id, updatePaymentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentsService.remove(+id);
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiOkResponse({ description: 'Payment successfully deleted' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.paymentsService.remove(id);
   }
 }

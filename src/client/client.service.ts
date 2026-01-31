@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { ClientResponseDto } from './dto/client-response.dto';
 
 @Injectable()
 export class ClientService {
@@ -12,25 +13,44 @@ export class ClientService {
     private readonly clientRepo: Repository<Client>,
   ) {}
 
-  async create(createClientDto: CreateClientDto) {
+  private toResponseDto(client: Client): ClientResponseDto {
+    return {
+      id: client.id,
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      notes: client.notes,
+    };
+  }
+
+  async create(createClientDto: CreateClientDto): Promise<ClientResponseDto> {
     const client = this.clientRepo.create(createClientDto);
-    return this.clientRepo.save(client);
+    const saved = await this.clientRepo.save(client);
+    return this.toResponseDto(saved);
   }
 
-  findAll() {
-    return this.clientRepo.find();
+  async findAll(): Promise<ClientResponseDto[]> {
+    const clients = await this.clientRepo.find();
+    return clients.map((c) => this.toResponseDto(c));
   }
 
-  findOne(id: number) {
-    return this.clientRepo.findOneBy({ id });
+  async findOne(id: number): Promise<ClientResponseDto> {
+    const client = await this.clientRepo.findOneBy({ id });
+    if (!client) {
+      throw new Error('Client not found');
+    }
+    return this.toResponseDto(client);
   }
 
-  async update(id: number, updateClientDto: UpdateClientDto) {
+  async update(
+    id: number,
+    updateClientDto: UpdateClientDto,
+  ): Promise<ClientResponseDto> {
     await this.clientRepo.update(id, updateClientDto);
     return this.findOne(id);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return this.clientRepo.delete(id);
   }
 }
