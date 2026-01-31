@@ -5,9 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle('CRM MVP')
-    .setDescription('API для управления клиентами, встречами и платежами')
+    .setDescription('')
     .setVersion('1.0')
     .build();
 
@@ -15,5 +20,6 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
+  console.log(`Server running on http://localhost:3000`);
 }
 bootstrap();
